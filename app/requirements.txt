@@ -1,7 +1,6 @@
 pandas
 matplotlib
 seaborn
-streamlit
+streamlit==1.40.0
 openpyxl
 numpy
-altair==4.2.2
