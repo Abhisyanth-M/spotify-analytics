@@ -8,7 +8,7 @@ import matplotlib.cm as cm
 #Load the data
 df = pd.read_csv("https://raw.githubusercontent.com/abhisyanth1701/spotify-analytics/master/data/dataset.csv")
 df=df.dropna()
-df = df.drop_duplicates()
+df = df.drop_duplicates(subset=["track_id"])
 
 #Dashboard title
 st.title("🎵🎶Spotify Music Trends Analyzer")
@@ -83,4 +83,4 @@ ax3.set_title("Average Mood (Valence) by Genre")
 ax3.set_xlabel("Valence Score (0=Sad, 1=Happy)")
 ax3.set_ylabel("Genre")
 plt.tight_layout()
-st.pyplot(fig3)
+st.pyplot(fig3) 
