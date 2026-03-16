@@ -4,3 +4,4 @@ seaborn
 streamlit==1.40.0
 openpyxl
 numpy
+scikit-learn
