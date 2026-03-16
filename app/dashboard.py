@@ -115,11 +115,12 @@ if search_query:
         angles = np.linspace(0, 2 * np.pi, len(radar_features), endpoint=False).tolist()
         angles += angles[:1]
 
-        fig_r, ax_r = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
+        fig_r, ax_r = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
         ax_r.plot(angles, values, color="#1DB954", linewidth=2)
         ax_r.fill(angles, values, color="#1DB954", alpha=0.25)
         ax_r.set_xticks(angles[:-1])
         ax_r.set_xticklabels(radar_features, size=11)
+        ax_r.tick_params(axis='x', pad=18)
         ax_r.set_ylim(0, 1)
         ax_r.set_title(f"{selected_name}", size=13, pad=15)
         st.pyplot(fig_r)
