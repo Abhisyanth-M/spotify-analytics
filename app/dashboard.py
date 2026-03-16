@@ -6,34 +6,49 @@ import numpy as np
 import matplotlib.cm as cm
 from sklearn.ensemble import RandomForestRegressor
 
-df = pd.read_csv("https://raw.githubusercontent.com/abhisyanth1701/spotify-analytics/master/data/dataset.csv")
-df = df.dropna()
-df = df.drop_duplicates(subset=["track_id"])
+@st.cache_data
+def load_data():
+    df = pd.read_csv("https://raw.githubusercontent.com/abhisyanth1701/spotify-analytics/master/data/dataset.csv")
+    df = df.dropna()
+    df = df.drop_duplicates(subset=["track_id"])
+    return df
 
-#Train ML model
-features=["danceability","energy","valence","tempo","acousticness","speechiness"]
-x=df[features]
-y=df["popularity"]
+@st.cache_resource
+def train_model(df):
+    features = ["danceability","energy","valence","tempo","acousticness","speechiness"]
+    x = df[features]
+    y = df["popularity"]
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model.fit(x, y)
+    return model, model.score(x, y)
 
-model = RandomForestRegressor(n_estimators=100, random_state=42)
-model.fit(x, y)
+df = load_data()
+model, r2 = train_model(df)
 
 st.title("🎵🎶Spotify Music Trends Analyzer")
 st.markdown("Analysing trends, genres and features and the moods of 114,000 songs!")
 
+all_genres = sorted(df["track_genre"].dropna().unique().tolist())
+selected_genre = st.selectbox("🎸 Filter by Genre", ["All Genres"] + all_genres)
+
+filtered_df = df if selected_genre == "All Genres" else df[df["track_genre"] == selected_genre]
+
 st.header("📊 Top 10 Most Popular Songs")
-top10 = df.sort_values("popularity", ascending=False).drop_duplicates(subset="track_name").head(10)
+top10 = filtered_df.sort_values("popularity", ascending=False).drop_duplicates(subset="track_name").head(10)
 fig, ax = plt.subplots(figsize=(10, 6))
 sns.barplot(data=top10, x="popularity", y="track_name", hue="track_name", palette="Blues_d", legend=False, ax=ax)
-ax.set_title("Top 10 Most Popular Songs")
+ax.set_title(f"Top 10 Most Popular Songs{' — ' + selected_genre if selected_genre != 'All Genres' else ''}")
 ax.set_xlabel("Popularity Score")
 ax.set_ylabel("Track Name")
 plt.tight_layout()
 st.pyplot(fig)
 
 st.header("📊 Genre vs Music Features")
-top_genres = df["track_genre"].value_counts().head(10).index
-df_genres = df[df["track_genre"].isin(top_genres)]
+if selected_genre == "All Genres":
+    top_genres = filtered_df["track_genre"].value_counts().head(10).index
+    df_genres = filtered_df[filtered_df["track_genre"].isin(top_genres)]
+else:
+    df_genres = filtered_df
 genre_features = df_genres.groupby("track_genre")[["energy", "danceability", "acousticness"]].mean()
 fig2, ax2 = plt.subplots(figsize=(12, 6))
 genre_features.plot(kind="bar", colormap="Set2", ax=ax2)
@@ -68,6 +83,8 @@ speechiness = st.slider("Speechiness",0.0,1.0,0.5)
 input_data=[[danceability,energy,valence,tempo,acousticness,speechiness]]
 prediction=model.predict(input_data)
 st.subheader(f"🎵 Predicted Popularity Score: {round(prediction[0])}/100")
+
+st.metric(label="Model Accuracy (R² Score)", value=f"{r2:.4f}", help="Training R². Measures how well the model fits the training data. 1.0 = perfect fit.")
 
 st.header("🔍 Song Search")
 st.markdown("Type a song name to explore its audio features.")
